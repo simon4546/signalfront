@@ -265,7 +265,7 @@ class ReceiveDialog extends Dialog {
         }
 
         
-        this.$el.querySelector('#fromName').textContent = file.userName + "发来文件：";
+        this.$el.querySelector('#fromName').textContent = file.userName + " 发来文件：";
         this.$el.querySelector('#fileName').textContent = file.name;
         this.$el.querySelector('#fileSize').textContent = this._formatFileSize(file.size);
         this.show();
@@ -337,7 +337,7 @@ class SendTextDialog extends Dialog {
         e.preventDefault();
         Events.fire('send-text', {
             to: this._recipient,
-            text: "来自" + userName + "的消息：" + this.$text.innerText
+            text: "来自 " + userName + " 的消息：" + this.$text.innerText
         });
     }
 }
