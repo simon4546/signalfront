@@ -177,7 +177,8 @@ body>header a {
 
 x-peers {
     width: 100%;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: scroll;
     flex-flow: row wrap;
     z-index: 2;
 }
