@@ -510,15 +510,15 @@ class WebShareTargetUI {
 
 class Snapdrop {
     constructor(username) {
-        // const server = new ServerConnection();
-        // const peers = new PeersManager(server);
-        // const peersUI = new PeersUI();
-        const peerUI = new PeerUI({ name: { displayName: "asdfasdf", deviceName: "android" } });
-        $$('x-peers').appendChild(peerUI.$el);
-        const peerUI1 = new PeerUI({ id: "asdf2", name: { displayName: "asdfasdf1", deviceName: "android" } });
-        $$('x-peers').appendChild(peerUI1.$el);
-        const peerUI2 = new PeerUI({ id: "asdf3", name: { displayName: "asdfasdf2", deviceName: "android" } });
-        $$('x-peers').appendChild(peerUI2.$el);
+        const server = new ServerConnection();
+        const peers = new PeersManager(server);
+        const peersUI = new PeersUI();
+        // const peerUI = new PeerUI({ name: { displayName: "asdfasdf", deviceName: "android" } });
+        // $$('x-peers').appendChild(peerUI.$el);
+        // const peerUI1 = new PeerUI({ id: "asdf2", name: { displayName: "asdfasdf1", deviceName: "android" } });
+        // $$('x-peers').appendChild(peerUI1.$el);
+        // const peerUI2 = new PeerUI({ id: "asdf3", name: { displayName: "asdfasdf2", deviceName: "android" } });
+        // $$('x-peers').appendChild(peerUI2.$el);
         // Events.on('load', e => {
 
         // });
