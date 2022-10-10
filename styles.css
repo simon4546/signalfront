@@ -178,7 +178,7 @@ body>header a {
 x-peers {
     width: 100%;
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
     flex-flow: row wrap;
     z-index: 2;
 }
@@ -647,9 +647,9 @@ x-toast:not([show]):not(:hover) {
 
 /* Default colors */
 body {
-    --text-color: #333;
-    --bg-color: #fff;
-    --bg-color-secondary: #f1f3f4;
+    --text-color: #fff;
+    --bg-color: #28266c;
+    --bg-color-secondary: #28266c;
 }
 
 /* Dark theme colors */
