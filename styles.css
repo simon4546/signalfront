@@ -648,8 +648,8 @@ x-toast:not([show]):not(:hover) {
 /* Default colors */
 body {
     --text-color: #fff;
-    --bg-color: #5754d0;
-    --bg-color-secondary: #5754d0;
+    --bg-color: #28266c;
+    --bg-color-secondary: #28266c;
 }
 
 /* Dark theme colors */
