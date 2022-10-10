@@ -61,8 +61,8 @@ class ServerConnection {
         // const url = protocol + '://' + location.host + location.pathname + 'server' + webrtc;
         // return url;
         // return 'wss://blossom-brief-kileskus.glitch.me'
-        // return 'wss://shared-signal.onrender.com'
-        return 'wss://test1.1pan.one?user=' + window.localStorage.getItem("chatUserName")
+        return 'wss://shared-signal.onrender.com?user='+ window.localStorage.getItem("chatUserName")
+//         return 'wss://test1.1pan.one?user=' + window.localStorage.getItem("chatUserName")
     }
 
     _disconnect() {
