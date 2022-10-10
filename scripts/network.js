@@ -436,7 +436,7 @@ class WSPeer {
 class FileChunker {
 
     constructor(file, onChunk, onPartitionEnd) {
-        this._chunkSize = 262144//512000; // 64 KB
+        this._chunkSize = 256000//512000; // 64 KB
         this._maxPartitionSize = 4096000; // 1 MB
         this._offset = 0;
         this._partitionSize = 0;
