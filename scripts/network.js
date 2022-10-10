@@ -61,8 +61,8 @@ class ServerConnection {
         // const url = protocol + '://' + location.host + location.pathname + 'server' + webrtc;
         // return url;
         // return 'wss://blossom-brief-kileskus.glitch.me'
-        return 'wss://shared-signal.onrender.com?user='+ window.localStorage.getItem("chatUserName")
-//         return 'wss://test1.1pan.one?user=' + window.localStorage.getItem("chatUserName")
+        // return 'wss://shared-signal.onrender.com'
+        return 'wss://test1.1pan.one?user=' + window.localStorage.getItem("chatUserName")
     }
 
     _disconnect() {
@@ -125,7 +125,8 @@ class Peer {
             type: 'header',
             name: file.name,
             mime: file.type,
-            size: file.size
+            size: file.size,
+            userName: window.localStorage.getItem("chatUserName")
         });
         this._chunker = new FileChunker(file,
             chunk => this._send(chunk),
@@ -182,12 +183,15 @@ class Peer {
     }
 
     _onFileHeader(header) {
+        console.log(header)
         this._lastProgress = 0;
         this._digester = new FileDigester({
             name: header.name,
             mime: header.mime,
             size: header.size
-        }, file => this._onFileReceived(file));
+        }, file => {
+            file.userName = header.userName || "";
+            this._onFileReceived(file)});
     }
 
     _onChunkReceived(chunk) {
@@ -208,6 +212,7 @@ class Peer {
     }
 
     _onFileReceived(proxyFile) {
+        console.log(proxyFile)
         Events.fire('file-received', proxyFile);
         this.sendJSON({ type: 'transfer-complete' });
     }
@@ -217,7 +222,7 @@ class Peer {
         this._reader = null;
         this._busy = false;
         this._dequeueFile();
-        Events.fire('notify-user', 'File transfer completed.');
+        Events.fire('notify-user', '文件传输成功.');
     }
 
     sendText(text) {

@@ -4,6 +4,7 @@ const isURL = text => /^((https?:\/\/|www)[^\s]+)/g.test(text.toLowerCase());
 window.isDownloadSupported = (typeof document.createElement('a').download !== 'undefined');
 window.isProductionEnvironment = !window.location.host.startsWith('localhost');
 window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+let userName;
 
 // set display name
 Events.on('display-name', e => {
@@ -100,7 +101,6 @@ class PeerUI {
             el.querySelector('input').click();
         });
         el.querySelector('.send-message-btn').addEventListener('click', e => {
-            console.log(12312)
             this._onRightClick(e);
         });
         el.querySelector('input').addEventListener('change', e => this._onFilesSelected(e));
@@ -140,7 +140,8 @@ class PeerUI {
         const files = $input.files;
         Events.fire('files-selected', {
             files: files,
-            to: this._peer.id
+            to: this._peer.id,
+            userName: userName
         });
         $input.value = null; // reset input
     }
@@ -247,6 +248,7 @@ class ReceiveDialog extends Dialog {
     }
 
     _displayFile(file) {
+        console.log(file)
         const $a = this.$el.querySelector('#download');
         const url = URL.createObjectURL(file.blob);
         $a.href = url;
@@ -262,6 +264,8 @@ class ReceiveDialog extends Dialog {
             this.$el.querySelector("#img-preview").src = url;
         }
 
+        
+        this.$el.querySelector('#fromName').textContent = file.userName + "发来文件：";
         this.$el.querySelector('#fileName').textContent = file.name;
         this.$el.querySelector('#fileSize').textContent = this._formatFileSize(file.size);
         this.show();
@@ -333,7 +337,7 @@ class SendTextDialog extends Dialog {
         e.preventDefault();
         Events.fire('send-text', {
             to: this._recipient,
-            text: this.$text.innerText
+            text: "来自" + userName + "的消息：" + this.$text.innerText
         });
     }
 }
@@ -526,14 +530,14 @@ class Snapdrop {
 }
 
 Events.on('load', e => {
-    let username = window.localStorage.getItem("chatUserName");
-    if (!username) {
+    userName = window.localStorage.getItem("chatUserName");
+    if (!userName) {
         document.querySelector("#edit-name-box").setAttribute('show', 1);
     } else {
         const snapdrop = new Snapdrop();
     }
     document.querySelector("#confirm-btn").addEventListener("click", e => {
-        let userName = document.querySelector("#userName").innerHTML;
+        userName = document.querySelector("#userName").innerHTML;
         if (userName) {
             console.log(userName);
             window.localStorage.setItem("chatUserName", userName);
