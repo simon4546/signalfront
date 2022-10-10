@@ -100,6 +100,7 @@ class PeerUI {
             el.querySelector('input').click();
         });
         el.querySelector('.send-message-btn').addEventListener('click', e => {
+            console.log(12312)
             this._onRightClick(e);
         });
         el.querySelector('input').addEventListener('change', e => this._onFilesSelected(e));
@@ -174,6 +175,7 @@ class PeerUI {
     }
 
     _onRightClick(e) {
+        console.log(e, this._peer)
         e.preventDefault();
         Events.fire('text-recipient', this._peer.id);
     }
@@ -508,44 +510,45 @@ class WebShareTargetUI {
 
 class Snapdrop {
     constructor(username) {
-        const server = new ServerConnection();
-        const peers = new PeersManager(server);
-        const peersUI = new PeersUI();
-        // const peerUI = new PeerUI({ name: { displayName: "asdfasdf", deviceName: "android" } });
-        // $$('x-peers').appendChild(peerUI.$el);
-        // const peerUI1 = new PeerUI({ id: "asdf2", name: { displayName: "asdfasdf1", deviceName: "android" } });
-        // $$('x-peers').appendChild(peerUI1.$el);
-        // const peerUI2 = new PeerUI({ id: "asdf3", name: { displayName: "asdfasdf2", deviceName: "android" } });
-        // $$('x-peers').appendChild(peerUI2.$el);
-        Events.on('load', e => {
-            const receiveDialog = new ReceiveDialog();
-            const sendTextDialog = new SendTextDialog();
-            const receiveTextDialog = new ReceiveTextDialog();
-            const toast = new Toast();
-            const notifications = new Notifications();
-            const networkStatusUI = new NetworkStatusUI();
-            const webShareTargetUI = new WebShareTargetUI();
-        });
+        // const server = new ServerConnection();
+        // const peers = new PeersManager(server);
+        // const peersUI = new PeersUI();
+        const peerUI = new PeerUI({ name: { displayName: "asdfasdf", deviceName: "android" } });
+        $$('x-peers').appendChild(peerUI.$el);
+        const peerUI1 = new PeerUI({ id: "asdf2", name: { displayName: "asdfasdf1", deviceName: "android" } });
+        $$('x-peers').appendChild(peerUI1.$el);
+        const peerUI2 = new PeerUI({ id: "asdf3", name: { displayName: "asdfasdf2", deviceName: "android" } });
+        $$('x-peers').appendChild(peerUI2.$el);
+        // Events.on('load', e => {
+
+        // });
     }
 }
 
-window.onload = function(){
+Events.on('load', e => {
     let username = window.localStorage.getItem("chatUserName");
-    if(!username){
+    if (!username) {
         document.querySelector("#edit-name-box").setAttribute('show', 1);
-    }else{
+    } else {
         const snapdrop = new Snapdrop();
     }
     document.querySelector("#confirm-btn").addEventListener("click", e => {
         let userName = document.querySelector("#userName").innerHTML;
-        if(userName){
+        if (userName) {
             console.log(userName);
             window.localStorage.setItem("chatUserName", userName);
             document.querySelector("#edit-name-box").removeAttribute('show');
             const snapdrop = new Snapdrop();
         }
-    })
-}
+    });
+    const receiveDialog = new ReceiveDialog();
+    const sendTextDialog = new SendTextDialog();
+    const receiveTextDialog = new ReceiveTextDialog();
+    const toast = new Toast();
+    const notifications = new Notifications();
+    const networkStatusUI = new NetworkStatusUI();
+    const webShareTargetUI = new WebShareTargetUI();
+})
 
 Notifications.PERMISSION_ERROR = `
 Notifications permission has been blocked
