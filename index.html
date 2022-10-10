@@ -1,0 +1,222 @@
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!-- Web App Config -->
+    <title>希朵局域网助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" type="text/css" href="./styles.css">
+    <script>
+        class Events {
+            static fire(type, detail) {
+                window.dispatchEvent(new CustomEvent(type, { detail: detail }));
+            }
+
+            static on(type, callback) {
+                return window.addEventListener(type, callback, false);
+            }
+        }
+    </script>
+    <script src="./scripts/network.js"></script>
+    <script src="./scripts/clipboard.js"></script>
+</head>
+
+<body translate="no">
+    <header class="">
+        <div id="displayName" placeholder="最简单的局域网文件传输工具"></div>
+        <a href="#" id="notification" class="icon-button" title="Enable Notifications" hidden>
+            <svg class="icon">
+                <use xlink:href="#notifications" />
+            </svg>
+        </a>
+    </header>
+    <x-dialog id="edit-name-box">
+        <x-background class="full center">
+            <div class="dialog-body">
+                <div id="userName" class="textarea" role="textbox" placeholder="输入用户名" autocomplete="off"
+                autofocus contenteditable></div>
+                <button class="button" id="confirm-btn" type="submit" close>确定</button>
+            </div>
+            
+        </x-background>
+    </x-dialog>
+    <!-- Peers -->
+    <x-peers></x-peers>
+    <x-no-peers>
+        <h2>等待其它人加入</h2>
+    </x-no-peers>
+    <x-instructions desktop="点击可传送文件，右键可以发送文本消息" mobile="点击可传送文件，右键可以发送文本消息"></x-instructions>
+    <!-- Receive Dialog -->
+    <x-dialog id="receiveDialog">
+        <x-background class="full center">
+            <x-paper shadow="2">
+                <h3>接收文件</h3>
+                <div class="font-subheading" id="fileName">文件名</div>
+                <div class="font-body2" id="fileSize"></div>
+                <div class='preview' style="visibility: hidden;">
+                    <img id='img-preview' src="">
+                </div>
+                <div class="row">
+                    <label for="autoDownload" class="grow">Ask to save each file before downloading</label>
+                    <input type="checkbox" id="autoDownload" checked="">
+                </div>
+                <div class="row-reverse">
+                    <a class="button" close id="download" title="Download File" autofocus>保存</a>
+                    <button class="button" close>拒绝</button>
+                </div>
+            </x-paper>
+        </x-background>
+    </x-dialog>
+    <!-- Send Text Dialog -->
+    <x-dialog id="sendTextDialog">
+        <form action="#">
+            <x-background class="full center">
+                <x-paper shadow="2">
+                    <h3>发送文件消息</h3>
+                    <div id="textInput" class="textarea" role="textbox" placeholder="发送文件消息" autocomplete="off"
+                        autofocus contenteditable></div>
+                    <div class="row-reverse">
+                        <button class="button" type="submit" close>发送</button>
+                        <a class="button" close>取消</a>
+                    </div>
+                </x-paper>
+            </x-background>
+        </form>
+    </x-dialog>
+    <!-- Receive Text Dialog -->
+    <x-dialog id="receiveTextDialog">
+        <x-background class="full center">
+            <x-paper shadow="2">
+                <h3>收到文本消息</h3>
+                <div class="font-subheading" id="text"></div>
+                <div class="row-reverse">
+                    <button class="button" id="copy" close autofocus>复制</button>
+                    <button class="button" close>关闭</button>
+                </div>
+            </x-paper>
+        </x-background>
+    </x-dialog>
+    <!-- Toast -->
+    <div class="toast-container full center">
+        <x-toast class="row" shadow="1" id="toast">文件传输完成</x-toast>
+    </div>
+    <!-- SVG Icon Library -->
+    <svg style="display: none;">
+        <symbol id=wifi-tethering viewBox="0 0 24 24">
+            <path
+                d="M12 11c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 2c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 2.22 1.21 4.15 3 5.19l1-1.74c-1.19-.7-2-1.97-2-3.45 0-2.21 1.79-4 4-4s4 1.79 4 4c0 1.48-.81 2.75-2 3.45l1 1.74c1.79-1.04 3-2.97 3-5.19zM12 3C6.48 3 2 7.48 2 13c0 3.7 2.01 6.92 4.99 8.65l1-1.73C5.61 18.53 4 15.96 4 13c0-4.42 3.58-8 8-8s8 3.58 8 8c0 2.96-1.61 5.53-4 6.92l1 1.73c2.99-1.73 5-4.95 5-8.65 0-5.52-4.48-10-10-10z">
+            </path>
+        </symbol>
+        <symbol id=desktop-mac viewBox="0 0 24 24">
+            <path
+                d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 12H3V4h18v10z">
+            </path>
+        </symbol>
+        <symbol id=phone-iphone viewBox="0 0 24 24">
+            <path
+                d="M15.5 1h-8C6.12 1 5 2.12 5 3.5v17C5 21.88 6.12 23 7.5 23h8c1.38 0 2.5-1.12 2.5-2.5v-17C18 2.12 16.88 1 15.5 1zm-4 21c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5-4H7V4h9v14z">
+            </path>
+        </symbol>
+        <symbol id=tablet-mac viewBox="0 0 24 24">
+            <path
+                d="M18.5 0h-14C3.12 0 2 1.12 2 2.5v19C2 22.88 3.12 24 4.5 24h14c1.38 0 2.5-1.12 2.5-2.5v-19C21 1.12 19.88 0 18.5 0zm-7 23c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm7.5-4H4V3h15v16z">
+            </path>
+        </symbol>
+        <symbol id=info-outline viewBox="0 0 24 24">
+            <path
+                d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z">
+            </path>
+        </symbol>
+        <symbol id=close viewBox="0 0 24 24">
+            <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z">
+            </path>
+        </symbol>
+        <symbol id=help-outline viewBox="0 0 24 24">
+            <path
+                d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z">
+            </path>
+        </symbol>
+        <g id="notifications">
+            <path
+                d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+        </g>
+        <symbol id="homescreen">
+            <path fill="none" d="M0 0h24v24H0V0z" />
+            <path
+                d="M18 1.01L8 1c-1.1 0-2 .9-2 2v3h2V5h10v14H8v-1H6v3c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM10 15h2V8H5v2h3.59L3 15.59 4.41 17 10 11.41z" />
+            <path fill="none" d="M0 0h24v24H0V0z" />
+        </symbol>
+        <symbol id="monetarization">
+            <path d="M0 0h24v24H0z" fill="none" />
+            <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z" />
+        </symbol>
+
+        <symbol id="chooseFile">
+           <path d="M456.170667 600.405333l79.808 46.08a42.666667 42.666667 0 1 0 12.266666-17.557333l-81.514666-47.061333a53.290667 53.290667 0 0 0 0-33.066667l77.504-44.736a32 32 0 1 0-10.453334-18.602667l-77.610666 44.8a53.333333 53.333333 0 1 0 0 70.144zM277.333333 213.333333h101.696a85.333333 85.333333 0 0 1 62.250667 26.965334l109.44 116.736A85.333333 85.333333 0 0 0 612.970667 384H746.666667a85.333333 85.333333 0 0 1 85.333333 85.333333v256a85.333333 85.333333 0 0 1-85.333333 85.333334H277.333333a85.333333 85.333333 0 0 1-85.333333-85.333334V298.666667a85.333333 85.333333 0 0 1 85.333333-85.333334z m264.832 21.333334H736a53.333333 53.333333 0 0 1 53.333333 53.333333V320a21.333333 21.333333 0 0 1-21.333333 21.333333h-144.149333a64 64 0 0 1-45.269334-18.752l-51.498666-51.498666A21.333333 21.333333 0 0 1 542.165333 234.666667z" fill="#ffffff" p-id="3877"></path>
+        </symbol>
+
+        <symbol id="sendMessage">
+            <path d="M511.913993 67.085503C264.90173 67.085503 63.989249 239.443642 63.989249 451.193012c0 116.453553 62.957164 226.026541 174.07828 301.368722l84.1149 51.948261c-3.612296 23.565933-18.749538 74.48211-33.370737 115.93751-4.300353 12.040988-0.860071 25.458088 8.428691 34.230808 6.020494 5.504452 13.761129 8.428691 21.673778 8.428691 4.472367 0 8.77272-0.860071 13.073072-2.752226 36.466991-16.169326 147.416093-68.977658 187.49538-125.398287 243.571981-3.440282 440.356123-174.422308 440.356123-383.935495C960.010751 239.443642 759.09827 67.085503 511.913993 67.085503zM580.203595 543.908618 384.967579 543.908618c-17.717453 0-31.994625-14.277171-31.994625-31.994625s14.277171-31.994625 31.994625-31.994625l195.236015 0c17.717453 0 31.994625 14.277171 31.994625 31.994625S597.921048 543.908618 580.203595 543.908618zM640.924576 415.930119 384.967579 415.930119c-17.717453 0-31.994625-14.277171-31.994625-31.994625s14.277171-31.994625 31.994625-31.994625l255.956996 0c17.717453 0 31.994625 14.277171 31.994625 31.994625C672.9192 401.652948 658.642029 415.930119 640.924576 415.930119z" p-id="5759" fill="#ffffff"></path>
+        </symbol>
+    </svg>
+    <!-- Scripts -->
+
+    <script type="text/html" id="userItemTemplate">
+        <label class="user-item" style="display:flex;justify-content: space-between;align-items: center;" title="">
+            <x-icon shadow="1">
+                <svg class="icon"><use xlink:href="#"/></svg>
+            </x-icon>
+            <div style="margin-left: 10px; display: flex; flex-direction: column;flex:1;">
+                <div class="name font-subheading"></div>
+                <div class="device-name font-body2"></div>
+                <div class="status font-body2"></div>
+            </div>
+            <div style="margin-left: 10px; display: flex; justify-content: flex-end;">
+                <x-icon shadow="1" class="choose-file-btn btn">
+                    <svg class="icon" viewBox="0 0 1024 1024"><use xlink:href="#chooseFile"/></svg>
+                </x-icon> 
+                <x-icon shadow="1" class="send-message-btn btn">
+                    <svg class="icon" viewBox="0 0 1024 1024"><use xlink:href="#sendMessage"/></svg>
+                </x-icon> 
+            </div>
+     
+            <div class="progress">
+              <div class="progress-line"></div>
+            </div>
+        </label>
+        <input type="file" multiple>
+    </script>
+    
+    <script src="./scripts/ui.js" ></script>
+    <!-- Sounds -->
+    <audio id="blop" autobuffer="true">
+        <source src="./sounds/blop.mp3" type="audio/mpeg">
+        <source src="./sounds/blop.ogg" type="audio/ogg">
+    </audio>
+    <!-- no script -->
+    <noscript>
+        <x-noscript class="full center column">
+            <h1>Enable JavaScript</h1>
+            <h3>works only with JavaScript</h3>
+        </x-noscript>
+        <style>
+            x-noscript {
+                background: #599cfc;
+                color: white;
+                z-index: 2;
+            }
+
+            a[href="#info"] {
+                color: white;
+            }
+        </style>
+    </noscript>
+
+    <script src="./renderer.js"></script>
+</body>
+
+</html>
