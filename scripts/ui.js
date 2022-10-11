@@ -8,9 +8,10 @@ let userName;
 
 // set display name
 Events.on('display-name', e => {
+    console.log("me", e.detail)
     const me = e.detail.message;
     const $displayName = $('displayName')
-    $displayName.textContent = '您的名字 ' + me.displayName;
+    $displayName.textContent = '您的名字 ' + me.displayName + "(" + me.ip + ")";
     $displayName.title = me.deviceName;
 });
 
@@ -91,6 +92,7 @@ class PeerUI {
         el.querySelector('svg use').setAttribute('xlink:href', this._icon());
         el.querySelector('.name').textContent = this._displayName();
         el.querySelector('.device-name').textContent = this._deviceName();
+        el.querySelector('.ip-address').textContent = this._ip();
         this.$el = el;
         this.$progress = el.querySelector('.progress');
     }
@@ -122,6 +124,10 @@ class PeerUI {
 
     _deviceName() {
         return this._peer.name.deviceName;
+    }
+
+    _ip(){
+        return this._peer.ip
     }
 
     _icon() {
@@ -513,7 +519,7 @@ class WebShareTargetUI {
 
 
 class Snapdrop {
-    constructor(username) {
+    constructor() {
         const server = new ServerConnection();
         const peers = new PeersManager(server);
         const peersUI = new PeersUI();
@@ -523,9 +529,6 @@ class Snapdrop {
         // $$('x-peers').appendChild(peerUI1.$el);
         // const peerUI2 = new PeerUI({ id: "asdf3", name: { displayName: "asdfasdf2", deviceName: "android" } });
         // $$('x-peers').appendChild(peerUI2.$el);
-        // Events.on('load', e => {
-
-        // });
     }
 }
 
@@ -561,25 +564,5 @@ Notifications permission has been blocked
 as the user has dismissed the permission prompt several times.
 This can be reset in Page Info
 which can be accessed by clicking the lock icon next to the URL.`;
-
-function getParents(el, parentSelector /* optional */) {
-    // console.log(el);
-    // If no parentSelector defined will bubble up all the way to *document*
-    if (parentSelector === undefined) {
-        parentSelector = document;
-    }
-
-    var parents = [];
-    var p = el.parentNode;
-
-    while (p !== parentSelector) {
-
-        var o = p;
-        // parents.push(o);
-        p = o.parentNode;
-    }
-    parents.push(parentSelector);
-    return parents;
-}
 
 
