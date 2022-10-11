@@ -264,7 +264,7 @@ class ReceiveDialog extends Dialog {
             this.$el.querySelector("#img-preview").src = url;
         }
 
-        
+
         this.$el.querySelector('#fromName').textContent = file.userName + " 发来文件：";
         this.$el.querySelector('#fileName').textContent = file.name;
         this.$el.querySelector('#fileSize').textContent = this._formatFileSize(file.size);
@@ -552,6 +552,8 @@ Events.on('load', e => {
     const notifications = new Notifications();
     const networkStatusUI = new NetworkStatusUI();
     const webShareTargetUI = new WebShareTargetUI();
+    var noSleep = new NoSleep();
+    noSleep.enable(); 
 })
 
 Notifications.PERMISSION_ERROR = `

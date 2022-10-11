@@ -5,7 +5,7 @@ class ServerConnection {
 
     constructor() {
         this._connect();
-        Events.on('beforeunload', e => this._disconnect());
+        Events.on('beforeunload', e => {this._disconnect();});
         Events.on('pagehide', e => this._disconnect());
         document.addEventListener('visibilitychange', e => this._onVisibilityChange());
     }
@@ -15,7 +15,7 @@ class ServerConnection {
         if (this._isConnected() || this._isConnecting()) return;
         const ws = new WebSocket(this._endpoint());
         ws.binaryType = 'arraybuffer';
-        ws.onopen = e => console.log('WS: server connected');
+        ws.onopen = e => {console.log('WS: server connected');};
         ws.onmessage = e => this._onMessage(e.data);
         ws.onclose = e => this._onDisconnect();
         ws.onerror = e => console.error(e);
