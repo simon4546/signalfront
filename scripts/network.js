@@ -5,7 +5,7 @@ class ServerConnection {
 
     constructor() {
         this._connect();
-        Events.on('beforeunload', e => {this._disconnect();});
+        Events.on('beforeunload', e => { this._disconnect(); });
         Events.on('pagehide', e => this._disconnect());
         document.addEventListener('visibilitychange', e => this._onVisibilityChange());
     }
@@ -15,7 +15,7 @@ class ServerConnection {
         if (this._isConnected() || this._isConnecting()) return;
         const ws = new WebSocket(this._endpoint());
         ws.binaryType = 'arraybuffer';
-        ws.onopen = e => {console.log('WS: server connected');};
+        ws.onopen = e => { console.log('WS: server connected'); };
         ws.onmessage = e => this._onMessage(e.data);
         ws.onclose = e => this._onDisconnect();
         ws.onerror = e => console.error(e);
@@ -106,9 +106,21 @@ class Peer {
     }
 
     sendFiles(files) {
+        let names = [], sizes=0;
         for (let i = 0; i < files.length; i++) {
             this._filesQueue.push(files[i]);
+            names.push(files[i].name);
+            sizes += files[i].size;
         }
+        this.sendJSON({
+            type: "before-transfer",  
+            names: names,
+            sizes: sizes,
+            userName: window.localStorage.getItem("chatUserName")
+        });
+    }
+
+    _beginSendFile(){
         if (this._busy) return;
         this._dequeueFile();
     }
@@ -179,7 +191,21 @@ class Peer {
             case 'text':
                 this._onTextReceived(message);
                 break;
+            case 'before-transfer':
+                this._onBeforeTransfer(message);
+                break;
+            case 'accept-transfer':
+                this._onAcceptTransfer(message);
+                break;
         }
+    }
+
+    _onBeforeTransfer(message) {
+        Events.fire('file-received', message);
+    }
+
+    _onAcceptTransfer(){
+       this._beginSendFile();     
     }
 
     _onFileHeader(header) {
@@ -191,16 +217,15 @@ class Peer {
             size: header.size
         }, file => {
             file.userName = header.userName || "";
-            this._onFileReceived(file)});
+            this._onFileReceived(file);
+        });
     }
 
     _onChunkReceived(chunk) {
-        if(!chunk.byteLength) return;
-        
+        if (!chunk.byteLength) return;
         this._digester.unchunk(chunk);
         const progress = this._digester.progress;
         this._onDownloadProgress(progress);
-
         // occasionally notify sender about our progress 
         if (progress - this._lastProgress < 0.01) return;
         this._lastProgress = progress;
@@ -213,7 +238,7 @@ class Peer {
 
     _onFileReceived(proxyFile) {
         console.log(proxyFile)
-        Events.fire('file-received', proxyFile);
+        // Events.fire('file-received', proxyFile);
         this.sendJSON({ type: 'transfer-complete' });
     }
 
@@ -264,7 +289,7 @@ class RTCPeer extends Peer {
     }
 
     _openChannel() {
-        const channel = this._conn.createDataChannel('data-channel', { 
+        const channel = this._conn.createDataChannel('data-channel', {
             ordered: true,
             reliable: true // Obsolete. See https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel/reliable
         });
@@ -290,7 +315,7 @@ class RTCPeer extends Peer {
 
         if (message.sdp) {
             this._conn.setRemoteDescription(new RTCSessionDescription(message.sdp))
-                .then( _ => {
+                .then(_ => {
                     if (message.sdp.type === 'offer') {
                         return this._conn.createAnswer()
                             .then(d => this._onDescription(d));
@@ -379,6 +404,8 @@ class PeersManager {
         Events.on('files-selected', e => this._onFilesSelected(e.detail));
         Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
+        Events.on('files-accept', e => this._filesAccept(e.detail));
+        
     }
 
     _onMessage(message) {
@@ -389,6 +416,7 @@ class PeersManager {
     }
 
     _onPeers(peers) {
+       
         peers.forEach(peer => {
             if (this.peers[peer.id]) {
                 this.peers[peer.id].refresh();
@@ -401,15 +429,17 @@ class PeersManager {
             //     this.peers[peer.id] = new WSPeer(this._server, peer.id);
             // }
         })
+        console.log("当前的peers列表", this.peers)
     }
 
     sendTo(peerId, message) {
-        this.peers[peerId].send(message);
+        this.peers[peerId] && this.peers[peerId].send(message);
     }
 
     _onFilesSelected(message) {
-        console.log(this.peers)
         console.log(message.to)
+        // this.sendTo(message.to, JSON.stringify({type: "before-transfer"}));
+        // this.sendTo(message.to, message);
         this.peers[message.to].sendFiles(message.files);
     }
 
@@ -422,6 +452,11 @@ class PeersManager {
         delete this.peers[peerId];
         if (!peer || !peer._peer) return;
         peer._peer.close();
+    }
+
+    _filesAccept(message){
+        console.log("message12", message)
+        this.peers[message.to].sendJSON({type:"accept-transfer"})
     }
 
 }
@@ -495,24 +530,42 @@ class FileDigester {
         this._mime = meta.mime || 'application/octet-stream';
         this._name = meta.name;
         this._callback = callback;
+        this._fileStream = streamSaver.createWriteStream(meta.name, {
+            size: meta.size, // (optional filesize) Will show progress
+            writableStrategy: undefined, // (optional)
+            readableStrategy: undefined  // (optional)
+        });
+        this._writer = this._fileStream.getWriter();
     }
 
     unchunk(chunk) {
-        this._buffer.push(chunk);
+        this.readableStream = new Response(chunk).body;
+
+        let reader = this.readableStream.getReader();
+
+        const pump = () => reader.read()
+            .then(res => res.done? console.log("分片保存完成"): this._writer.write(res.value).then(pump));
+        pump();
+
+        // this._buffer.push(chunk);
         this._bytesReceived += chunk.byteLength || chunk.size;
-        const totalChunks = this._buffer.length;
+        // const totalChunks = this._buffer.length;
         this.progress = this._bytesReceived / this._size;
         if (isNaN(this.progress)) this.progress = 1
 
         if (this._bytesReceived < this._size) return;
         // we are done
-        let blob = new Blob(this._buffer, { type: this._mime });
+        // let blob = new Blob(this._buffer, { type: this._mime });
         this._callback({
             name: this._name,
             mime: this._mime,
             size: this._size,
-            blob: blob
+            blob: []
         });
+        setTimeout(()=>{
+            console.log("传输成功啊");
+            this._writer.close()
+        },1000)
     }
 
 }

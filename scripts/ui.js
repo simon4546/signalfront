@@ -4,7 +4,7 @@ const isURL = text => /^((https?:\/\/|www)[^\s]+)/g.test(text.toLowerCase());
 window.isDownloadSupported = (typeof document.createElement('a').download !== 'undefined');
 window.isProductionEnvironment = !window.location.host.startsWith('localhost');
 window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-let userName;
+let userName, globalPeers;
 
 // set display name
 Events.on('display-name', e => {
@@ -14,6 +14,15 @@ Events.on('display-name', e => {
     $displayName.textContent = '您的名字 ' + me.displayName + "(" + me.ip + ")";
     $displayName.title = me.deviceName;
 });
+
+function getItemByName(name) {
+    console.log("当前的peers", globalPeers)
+    return globalPeers.find((item) => item.name.displayName == name);
+}
+
+function getItemById(id) {
+    return globalPeers.findIndex((item) => item.id == id);
+}
 
 class PeersUI {
 
@@ -29,10 +38,14 @@ class PeersUI {
         if ($(peer.id)) return; // peer already exists
         const peerUI = new PeerUI(peer);
         $$('x-peers').appendChild(peerUI.$el);
+        if (getItemById(peer.id) < 0) {
+            globalPeers.push(peer);
+        }
         // setTimeout(e => window.animateBackground(false), 1750); // Stop animation
     }
 
     _onPeers(peers) {
+        globalPeers = JSON.parse(JSON.stringify(peers));
         this._clearPeers();
         peers.forEach(peer => this._onPeerJoined(peer));
     }
@@ -41,6 +54,9 @@ class PeersUI {
         const $peer = $(peerId);
         if (!$peer) return;
         $peer.remove();
+        if (getItemById(peerId) >= 0) {
+            globalPeers.splice([getItemById(peerId)], 1);
+        }
     }
 
     _onFileProgress(progress) {
@@ -70,6 +86,8 @@ class PeersUI {
             });
         }
     }
+
+
 }
 
 class PeerUI {
@@ -126,7 +144,7 @@ class PeerUI {
         return this._peer.name.deviceName;
     }
 
-    _ip(){
+    _ip() {
         return this._peer.ip
     }
 
@@ -227,10 +245,37 @@ class ReceiveDialog extends Dialog {
     constructor() {
         super('receiveDialog');
         Events.on('file-received', e => {
-            this._nextFile(e.detail);
-            window.blop.play();
+            let file = e.detail;
+            if (getItemByName(file.userName)) {
+                this._targetId = getItemByName(file.userName).id;
+            }
+            //这里如果是自动下载，直接返回接受
+            if (this._autoDownload()) {
+                Events.fire('files-accept', {
+                    to: this._targetId
+                });
+                return
+            }
+            // this._nextFile(e.detail);
+            // window.blop.play();
+            this.$el.querySelector('#fromName').textContent = "【" + file.userName + "】发来" + file.names.length + "个文件：";
+            let showFileNames = "";
+            for (let i = 0; i < file.names.length; i++) {
+                showFileNames += "【" + file.names[i] + "】";
+            }
+            this.$el.querySelector('#fileName').textContent = showFileNames;
+            this.$el.querySelector('#fileSize').textContent = "文件大小合计：" + this._formatFileSize(file.sizes);
+            this.show();
+
         });
         this._filesQueue = [];
+
+        this.$el.querySelector('#download').addEventListener("click", () => {
+            Events.fire('files-accept', {
+                to: this._targetId
+            });
+        });
+
     }
 
     _nextFile(nextFile) {
@@ -238,7 +283,7 @@ class ReceiveDialog extends Dialog {
         if (this._busy) return;
         this._busy = true;
         const file = this._filesQueue.shift();
-        this._displayFile(file);
+        // this._displayFile(file);
     }
 
     _dequeueFile() {
@@ -254,7 +299,6 @@ class ReceiveDialog extends Dialog {
     }
 
     _displayFile(file) {
-        console.log(file)
         const $a = this.$el.querySelector('#download');
         const url = URL.createObjectURL(file.blob);
         $a.href = url;
@@ -444,16 +488,16 @@ class Notifications {
 
     _messageNotification(message) {
         if (isURL(message)) {
-            const notification = this._notify(message, 'Click to open link');
+            const notification = this._notify(message, '点击打开链接');
             this._bind(notification, e => window.open(message, '_blank', null, true));
         } else {
-            const notification = this._notify(message, 'Click to copy text');
+            const notification = this._notify(message, '点击复制文本');
             this._bind(notification, e => this._copyText(message, notification));
         }
     }
 
     _downloadNotification(message) {
-        const notification = this._notify(message, 'Click to download');
+        const notification = this._notify(message, '点击下载');
         if (!window.isDownloadSupported) return;
         this._bind(notification, e => this._download(notification));
     }
@@ -556,7 +600,33 @@ Events.on('load', e => {
     const networkStatusUI = new NetworkStatusUI();
     const webShareTargetUI = new WebShareTargetUI();
     var noSleep = new NoSleep();
-    noSleep.enable(); 
+    noSleep.enable();
+
+
+    // const blob = new Blob(['StreamSaver is awesome'])
+    // const fileStream = streamSaver.createWriteStream('sample2.txt', {
+    //     size: blob.size // Makes the procentage visiable in the download
+    // })
+
+    // const readableStream = blob.stream()
+
+    // // more optimized pipe version
+    // // (Safari may have pipeTo but it's useless without the WritableStream)
+    // if (window.WritableStream && readableStream.pipeTo) {
+    //     return readableStream.pipeTo(fileStream)
+    //         .then(() => console.log('done writing'))
+    // }
+
+    // // Write (pipe) manually
+    // let writer = fileStream.getWriter()
+    // const reader = readableStream.getReader()
+    // const pump = () => reader.read()
+    //     .then(res => res.done
+    //         ? writer.close()
+    //         : writer.write(res.value).then(pump))
+
+    // pump()
+
 })
 
 Notifications.PERMISSION_ERROR = `
